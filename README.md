@@ -161,6 +161,15 @@ To make a new route public, add it to the `publicRoutes` array:
 const publicRoutes = ["/", "/sign-in", "/sign-up", "/api/auth", "/pricing"]
 ```
 
+For an additional layer of protection, pages inside `app/(authenticated)/` are wrapped by a layout that checks the session server-side. To add a new protected page, just create it inside that folder:
+
+```
+app/(authenticated)/dashboard/page.tsx   → /dashboard (protected)
+app/(authenticated)/settings/page.tsx    → /settings (protected)
+```
+
+The `(authenticated)` folder name is a Next.js route group — it doesn't appear in the URL.
+
 ### Add OAuth providers (optional)
 
 To add Google, GitHub, Discord, or other OAuth providers alongside email/password, edit `auth.ts`:
@@ -234,15 +243,17 @@ Opens a visual data browser at localhost:4983.
 auth.ts                         ← Auth.js configuration (credentials provider, JWT)
 proxy.ts                        ← Route protection (all routes require login by default)
 app/
-  page.tsx                      ← Homepage
+  page.tsx                      ← Homepage (public)
   layout.tsx                    ← Root layout (fonts, theme, SessionProvider)
   globals.css                   ← Tailwind + CSS variables
-  sign-in/page.tsx              ← Email/password sign-in form
-  sign-up/page.tsx              ← Registration form
+  sign-in/page.tsx              ← Email/password sign-in form (public)
+  sign-up/page.tsx              ← Registration form (public)
   api/auth/[...nextauth]/
     route.ts                    ← Auth.js API route handler
-  protected/
-    page.tsx                    ← Protected page (requires login)
+  (authenticated)/
+    layout.tsx                  ← Auth check layout (redirects if not signed in)
+    protected/
+      page.tsx                  ← Example protected page
 components/
   ui/                           ← shadcn/ui components (button, card, input, etc.)
   auth-button.tsx               ← Login/user button (switches based on session)
