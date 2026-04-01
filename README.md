@@ -53,9 +53,20 @@ Edit `.env.local` and fill in:
 npm run db:push
 ```
 
-This creates the auth tables and example `posts` table in your dev database.
+This creates the auth tables in your dev database.
 
-### 5. Run it
+### 5. Seed demo users (optional)
+
+```bash
+npm run db:seed
+```
+
+This creates 3 demo accounts you can sign in with right away (password for all: `password`):
+- alice@example.com
+- bob@example.com
+- charlie@example.com
+
+### 6. Run it
 
 ```bash
 npm run dev
@@ -63,7 +74,7 @@ npm run dev
 
 Open [localhost:3000](http://localhost:3000) in your browser. You can sign up with any email/password.
 
-### 6. Deploy to Vercel
+### 7. Deploy to Vercel
 
 ```bash
 # Option A: Tell Claude Code
@@ -266,6 +277,7 @@ lib/
   db/
     drizzle.ts                  ← Database client (Drizzle + postgres.js)
     schema.ts                   ← Database schema (auth tables + your tables)
+    seed.ts                     ← Seed script (demo users)
   utils.ts                      ← cn() helper for classnames
 drizzle.config.ts               ← Drizzle Kit configuration
 .claude/

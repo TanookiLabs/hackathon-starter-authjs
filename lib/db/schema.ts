@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, boolean, integer, primaryKey } from "drizzle-orm/pg-core"
+import { pgTable, text, timestamp, integer, primaryKey } from "drizzle-orm/pg-core"
 import type { AdapterAccountType } from "next-auth/adapters"
 
 // ═══════════════════════════════════════════════════════════════
@@ -63,18 +63,3 @@ export const verificationTokens = pgTable(
 // Your app tables — add your own tables below
 // After editing, run: npm run db:push
 // ═══════════════════════════════════════════════════════════════
-
-export const posts = pgTable("posts", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  title: text("title").notNull(),
-  content: text("content"),
-  published: boolean("published").default(false).notNull(),
-  authorId: text("author_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-})
-
-export type Post = typeof posts.$inferSelect
-export type NewPost = typeof posts.$inferInsert
