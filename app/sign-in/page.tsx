@@ -14,7 +14,7 @@ export default function SignInPage() {
       const result = await signInWithCredentials(formData)
       return result ?? {}
     },
-    {}
+    {} as { error?: string }
   )
 
   return (
