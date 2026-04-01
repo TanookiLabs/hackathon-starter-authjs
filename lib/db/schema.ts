@@ -3,7 +3,7 @@ import type { AdapterAccountType } from "next-auth/adapters"
 
 // ═══════════════════════════════════════════════════════════════
 // Auth.js tables — required for authentication
-// Do not rename these columns; Auth.js expects this exact schema.
+// Do not rename the existing columns; Auth.js expects this exact schema.
 // ═══════════════════════════════════════════════════════════════
 
 export const users = pgTable("users", {
@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   email: text("email").unique(),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
+  password: text("password"),
 })
 
 export const accounts = pgTable(

@@ -1,11 +1,11 @@
 # Hackathon Starter: Next.js + Auth.js + Drizzle
 
-Pre-configured for the AI Bootcamp with Slow Creator Fund. Uses Auth.js (NextAuth v5) for authentication and Drizzle ORM for type-safe database queries. No Supabase client SDK — your database is accessed only through server-side code.
+Pre-configured for the AI Bootcamp with Slow Creator Fund. Uses Auth.js (NextAuth v5) for email/password authentication and Drizzle ORM for type-safe database queries. No third-party auth services — everything runs through your own database.
 
 ## What's Included
 
 - **Next.js** (App Router) with TypeScript
-- **Auth.js** (NextAuth v5) for Google OAuth authentication, sessions stored in your database
+- **Auth.js** (NextAuth v5) for email/password authentication (bcrypt hashed, JWT sessions)
 - **Drizzle ORM** for type-safe database queries (schema-first, auto-syncs to your database)
 - **Tailwind CSS** + **shadcn/ui** components
 - **Claude Code config** (CLAUDE.md + custom slash commands)
@@ -30,14 +30,7 @@ You need a PostgreSQL database. Pick any provider:
 - **Neon**: Go to [neon.tech](https://neon.tech) → create a project → copy the connection string.
 - **Railway**: Go to [railway.app](https://railway.app) → add a PostgreSQL service → copy the connection string.
 
-### 3. Set up Google OAuth
-
-- Go to [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials)
-- Create a new **OAuth 2.0 Client ID** (Web application)
-- Add authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
-- Copy the **Client ID** and **Client Secret**
-
-### 4. Configure environment
+### 3. Configure environment
 
 ```bash
 cp .env.local.example .env.local
@@ -45,11 +38,11 @@ cp .env.local.example .env.local
 
 Edit `.env.local` and fill in:
 - `AUTH_SECRET` — generate with `npx auth secret`
-- `AUTH_GOOGLE_ID` — your Google OAuth Client ID
-- `AUTH_GOOGLE_SECRET` — your Google OAuth Client Secret
 - `DATABASE_URL` — your PostgreSQL connection string
 
-### 5. Push the database schema
+That's it — just two environment variables to get started.
+
+### 4. Push the database schema
 
 ```bash
 npm run db:push
@@ -57,15 +50,15 @@ npm run db:push
 
 This creates the auth tables and example `posts` table in your database.
 
-### 6. Run it
+### 5. Run it
 
 ```bash
 npm run dev
 ```
 
-Open [localhost:3000](http://localhost:3000) in your browser.
+Open [localhost:3000](http://localhost:3000) in your browser. You can sign up with any email/password.
 
-### 7. Deploy to Vercel
+### 6. Deploy to Vercel
 
 ```bash
 # Option A: Tell Claude Code
@@ -76,9 +69,7 @@ claude
 # Go to vercel.com/new → Import your GitHub repo → Deploy
 ```
 
-Add your environment variables in Vercel → Settings → Environment Variables (`AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `DATABASE_URL`).
-
-For production, add `AUTH_GOOGLE_ID` redirect URI: `https://your-app.vercel.app/api/auth/callback/google`
+Add your environment variables in Vercel → Settings → Environment Variables (`AUTH_SECRET`, `DATABASE_URL`).
 
 Database schema migrations run automatically on every deploy — the build command runs `drizzle-kit push` before `next build`, so your production database stays in sync with your code.
 
@@ -109,7 +100,7 @@ Tell Claude Code what you want to add. Some examples:
 
 ## Authentication
 
-Authentication uses **Auth.js (NextAuth v5)** with Google OAuth. Sessions are stored in your database via the Drizzle adapter.
+Authentication uses **Auth.js (NextAuth v5)** with email/password. Passwords are hashed with bcrypt. Sessions use JWT tokens (no session table lookups on every request).
 
 ### Get the current user in a Server Component or Server Action
 
@@ -117,7 +108,7 @@ Authentication uses **Auth.js (NextAuth v5)** with Google OAuth. Sessions are st
 import { auth } from "@/auth"
 
 const session = await auth()
-const user = session?.user // { id, name, email, image }
+const user = session?.user // { id, name, email }
 ```
 
 ### Get the current user in a Client Component
@@ -141,18 +132,23 @@ export const config = {
 }
 ```
 
-### Add more auth providers
+### Add OAuth providers (optional)
 
-Edit `auth.ts` to add GitHub, Discord, email/password, or any other provider:
+To add Google, GitHub, Discord, or other OAuth providers alongside email/password, edit `auth.ts`:
 
 ```typescript
-import GitHub from "next-auth/providers/github"
+import Google from "next-auth/providers/google"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // ...
-  providers: [Google, GitHub],
+  providers: [
+    Credentials({ ... }),
+    Google,
+  ],
 })
 ```
+
+Then add `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` to your `.env.local`.
 
 ## Database with Drizzle ORM
 
@@ -218,13 +214,14 @@ No manual migration step. Code and schema deploy together.
 ## Project Structure
 
 ```
-auth.ts                         ← Auth.js configuration (providers, adapter)
+auth.ts                         ← Auth.js configuration (credentials provider, JWT)
 middleware.ts                   ← Route protection (redirects unauthenticated users)
 app/
   page.tsx                      ← Homepage
   layout.tsx                    ← Root layout (fonts, theme, SessionProvider)
   globals.css                   ← Tailwind + CSS variables
-  sign-in/page.tsx              ← Sign-in page
+  sign-in/page.tsx              ← Email/password sign-in form
+  sign-up/page.tsx              ← Registration form
   api/auth/[...nextauth]/
     route.ts                    ← Auth.js API route handler
   protected/
@@ -232,10 +229,12 @@ app/
 components/
   ui/                           ← shadcn/ui components (button, card, input, etc.)
   auth-button.tsx               ← Login/user button (switches based on session)
-  sign-in-button.tsx            ← Sign-in button
+  sign-in-button.tsx            ← Sign in / Sign up links
   user-button.tsx               ← User dropdown with sign-out
   session-provider.tsx          ← Client-side SessionProvider wrapper
 lib/
+  actions/
+    auth.ts                     ← Sign-up and sign-in server actions
   db/
     drizzle.ts                  ← Database client (Drizzle + postgres.js)
     schema.ts                   ← Database schema (auth tables + your tables)
@@ -254,8 +253,6 @@ Copy `.env.local.example` to `.env.local` and fill in the values you need:
 | Variable              | Required              | Where to Get It                            |
 | --------------------- | --------------------- | ------------------------------------------ |
 | `AUTH_SECRET`         | Yes                   | Generate with `npx auth secret`            |
-| `AUTH_GOOGLE_ID`      | Yes                   | Google Cloud Console → OAuth Credentials   |
-| `AUTH_GOOGLE_SECRET`  | Yes                   | Google Cloud Console → OAuth Credentials   |
 | `DATABASE_URL`        | Yes                   | Your PostgreSQL provider's dashboard       |
 | `REPLICATE_API_TOKEN` | For image/video gen   | replicate.com/account/api-tokens           |
 | `OPENAI_API_KEY`      | For text gen (OpenAI) | platform.openai.com/api-keys               |

@@ -6,7 +6,7 @@ This is a Next.js app built at the Slow Ventures Creator Fund AI Hackathon.
 
 - Next.js (App Router) with TypeScript
 - Tailwind CSS + shadcn/ui for styling
-- Auth.js (NextAuth v5) for authentication (Google OAuth, sessions stored in database)
+- Auth.js (NextAuth v5) for authentication (email/password with bcrypt, JWT sessions)
 - Drizzle ORM for database queries (type-safe, schema defined in lib/db/schema.ts)
 - PostgreSQL database (hosted on Supabase, Neon, Railway, or any provider)
 - Deployed on Vercel

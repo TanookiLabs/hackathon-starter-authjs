@@ -20,8 +20,8 @@ export default function Home() {
               Next.js + Auth.js + Drizzle ORM
             </h1>
             <p className="text-center text-muted-foreground max-w-md">
-              A hackathon starter template with Google authentication, type-safe database queries,
-              and automatic schema migrations on deploy.
+              A hackathon starter template with email/password authentication, type-safe database
+              queries, and automatic schema migrations on deploy.
             </p>
             <div className="flex gap-4">
               <Link

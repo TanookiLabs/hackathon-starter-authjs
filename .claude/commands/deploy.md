@@ -7,4 +7,4 @@ Steps:
 3. Push to GitHub
 4. Confirm the Vercel deployment is building. Show the deployment URL when done.
 5. Explain: Vercel runs `drizzle-kit push && next build`, so the production database schema is updated automatically during every deploy. No manual migration step needed.
-6. Remind the user: make sure their environment variables are set in Vercel Settings (AUTH_SECRET, AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET, DATABASE_URL). For production, the Google OAuth redirect URI must include the production URL.
+6. Remind the user: make sure their environment variables are set in Vercel Settings (AUTH_SECRET, DATABASE_URL).

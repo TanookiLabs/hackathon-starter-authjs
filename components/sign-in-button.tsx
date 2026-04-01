@@ -1,12 +1,15 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
-import { signIn } from "next-auth/react"
+import Link from "next/link"
 
 export function SignInButton() {
   return (
-    <Button size="sm" onClick={() => signIn()}>
-      Sign in
-    </Button>
+    <div className="flex gap-2">
+      <Button asChild size="sm" variant="outline">
+        <Link href="/sign-in">Sign in</Link>
+      </Button>
+      <Button asChild size="sm">
+        <Link href="/sign-up">Sign up</Link>
+      </Button>
+    </div>
   )
 }
