@@ -22,15 +22,23 @@ cd my-project
 npm install
 ```
 
-### 2. Set up a PostgreSQL database
+### 2. Set up your databases
 
-You need a PostgreSQL database. Pick any provider:
+You'll need **two PostgreSQL databases** — one for development and one for production. This keeps your dev data separate from your live app.
 
-- **Supabase** (recommended): Go to [supabase.com/dashboard](https://supabase.com/dashboard) → create a project → **Connect** → **ORM** tab → select **Drizzle** → copy the `DATABASE_URL`. **Change the port to `5432`** (Session Pooler).
-- **Neon**: Go to [neon.tech](https://neon.tech) → create a project → copy the connection string.
-- **Railway**: Go to [railway.app](https://railway.app) → add a PostgreSQL service → copy the connection string.
+**Using Supabase (recommended):**
 
-### 3. Configure environment
+1. Go to [supabase.com/dashboard](https://supabase.com/dashboard)
+2. Create **two projects**: one named `my-project-dev` and one named `my-project-prod`
+3. For each project, go to **Connect** → **ORM** tab → select **Drizzle** → copy the `DATABASE_URL`
+
+> ⚠️ **Important:** Supabase's Drizzle example uses port `6543` (Transaction Pooler), which breaks `db:push`. **Change the port to `5432`** (Session Pooler) before pasting into your config.
+>
+> It should look like: `postgresql://postgres.YOURREF:PASSWORD@aws-X-REGION.pooler.supabase.com:5432/postgres`
+
+**Other providers:** [Neon](https://neon.tech), [Railway](https://railway.app), or any PostgreSQL host. Create two databases and get a connection string for each.
+
+### 3. Configure local environment
 
 ```bash
 cp .env.local.example .env.local
@@ -38,9 +46,7 @@ cp .env.local.example .env.local
 
 Edit `.env.local` and fill in:
 - `AUTH_SECRET` — generate with `npx auth secret`
-- `DATABASE_URL` — your PostgreSQL connection string
-
-That's it — just two environment variables to get started.
+- `DATABASE_URL` — your **dev** database connection string
 
 ### 4. Push the database schema
 
@@ -48,7 +54,7 @@ That's it — just two environment variables to get started.
 npm run db:push
 ```
 
-This creates the auth tables and example `posts` table in your database.
+This creates the auth tables and example `posts` table in your dev database.
 
 ### 5. Run it
 
@@ -69,9 +75,45 @@ claude
 # Go to vercel.com/new → Import your GitHub repo → Deploy
 ```
 
-Add your environment variables in Vercel → Settings → Environment Variables (`AUTH_SECRET`, `DATABASE_URL`).
+Add environment variables in **Vercel → Settings → Environment Variables**:
 
-Database schema migrations run automatically on every deploy — the build command runs `drizzle-kit push` before `next build`, so your production database stays in sync with your code.
+| Variable       | Scope                      | Value                                 |
+| -------------- | -------------------------- | ------------------------------------- |
+| `AUTH_SECRET`  | Production, Preview, Dev   | Same secret for all environments      |
+| `DATABASE_URL` | **Production**             | Your **prod** database connection URL |
+| `DATABASE_URL` | **Preview** (and/or Dev)   | Your **dev** database connection URL  |
+
+> Vercel lets you set different values for the same variable per environment. This is how you keep dev and prod databases separate.
+
+Database schema migrations run automatically on every deploy — the build command runs `drizzle-kit push` before `next build`, so both your dev and production databases stay in sync with your code.
+
+## Environments
+
+This template supports three environments out of the box:
+
+| Environment | Where It Runs | Database | How It's Triggered |
+|-------------|--------------|----------|-------------------|
+| **Local dev** | Your machine (`npm run dev`) | Dev DB (from `.env.local`) | You start it |
+| **Preview / Staging** | Vercel preview deploys | Dev DB (from Vercel Preview env vars) | Push to a non-main branch or open a PR |
+| **Production** | Vercel production | Prod DB (from Vercel Production env vars) | Push to `main` branch |
+
+### How it works
+
+- **`.env.local`** on your machine points `DATABASE_URL` at your dev database
+- **Vercel Preview** deployments use the `DATABASE_URL` you set for the Preview scope — point this at your dev database
+- **Vercel Production** deployments use the `DATABASE_URL` you set for the Production scope — point this at your production database
+- The build command (`drizzle-kit push && next build`) automatically syncs the schema to whichever database `DATABASE_URL` points to
+
+### Workflow
+
+```
+1. Develop locally (uses dev DB via .env.local)
+2. Push to a feature branch → Vercel creates a preview deploy (uses dev DB)
+3. Test the preview URL
+4. Merge to main → Vercel deploys to production (uses prod DB, auto-migrates schema)
+```
+
+This means your schema changes deploy automatically to the right database in each environment. No manual migration steps.
 
 ## Using Claude Code
 
@@ -173,7 +215,7 @@ export const products = pgTable("products", {
 npm run db:push
 ```
 
-This pushes your schema to the dev database (from `.env.local`). When you deploy to Vercel, the same command runs automatically against the production database.
+This pushes your schema to the dev database (from `.env.local`). When you deploy to Vercel, the same command runs automatically against whichever database `DATABASE_URL` points to in that environment.
 
 ### Query data
 
@@ -205,11 +247,11 @@ Opens a visual data browser at localhost:4983.
 You edit lib/db/schema.ts locally
   → npm run db:push syncs to dev database
   → git push to GitHub
-  → Vercel builds: runs drizzle-kit push (syncs prod database) then next build
-  → Your app and database are both updated
+  → Vercel builds: runs drizzle-kit push (syncs the target database) then next build
+  → Preview deploys sync dev DB, production deploys sync prod DB
 ```
 
-No manual migration step. Code and schema deploy together.
+No manual migration step. Code and schema deploy together to the right database.
 
 ## Project Structure
 
