@@ -9,12 +9,12 @@ import Link from "next/link"
 import { useActionState } from "react"
 
 export default function SignInPage() {
-  const [state, action, pending] = useActionState(
-    async (_prev: { error?: string }, formData: FormData) => {
+  const [state, action, pending] = useActionState<{ error?: string }, FormData>(
+    async (_prev, formData) => {
       const result = await signInWithCredentials(formData)
       return result ?? {}
     },
-    {} as { error?: string }
+    {}
   )
 
   return (
