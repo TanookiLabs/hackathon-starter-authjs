@@ -28,4 +28,5 @@ This is a Next.js app built at the Slow Ventures Creator Fund AI Hackathon.
 - Commit frequently with descriptive messages
 - When creating new pages, add them to the app/ directory following Next.js App Router conventions
 - File paths are routes: app/dashboard/page.tsx = /dashboard
-- Protected routes are handled by middleware.ts — add paths to the matcher array
+- All routes are protected by default via proxy.ts — new pages require login automatically
+- To make a route public, add it to the `publicRoutes` array in proxy.ts

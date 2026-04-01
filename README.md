@@ -150,15 +150,15 @@ const { data: session } = useSession()
 const user = session?.user
 ```
 
-### Protect a route
+### Route protection
 
-Routes under `/protected/*` are automatically protected by `middleware.ts`. To protect additional routes, add them to the matcher:
+All routes are protected by default — any page you create requires login automatically. Public routes (like the homepage and sign-in pages) are explicitly whitelisted in `proxy.ts`.
+
+To make a new route public, add it to the `publicRoutes` array:
 
 ```typescript
-// middleware.ts
-export const config = {
-  matcher: ["/protected/:path*", "/dashboard/:path*"],
-}
+// proxy.ts
+const publicRoutes = ["/", "/sign-in", "/sign-up", "/api/auth", "/pricing"]
 ```
 
 ### Add OAuth providers (optional)
@@ -232,7 +232,7 @@ Opens a visual data browser at localhost:4983.
 
 ```
 auth.ts                         ← Auth.js configuration (credentials provider, JWT)
-middleware.ts                   ← Route protection (redirects unauthenticated users)
+proxy.ts                        ← Route protection (all routes require login by default)
 app/
   page.tsx                      ← Homepage
   layout.tsx                    ← Root layout (fonts, theme, SessionProvider)
